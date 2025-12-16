@@ -13,6 +13,9 @@ public class Admin {
     @JoinColumn(name = "id") // FK to `users.id`
     private User user;
 
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
     // Getters and Setters
 
     public Long getId() {
@@ -29,6 +32,14 @@ public class Admin {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }
 

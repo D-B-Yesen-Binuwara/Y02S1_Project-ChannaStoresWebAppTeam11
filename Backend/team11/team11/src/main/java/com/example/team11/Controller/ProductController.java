@@ -17,18 +17,19 @@ import com.example.team11.DTO.ProductDTO;
 import com.example.team11.Service.ProductService;
 
 @RestController
-@RequestMapping("/inventory")
+@CrossOrigin
+@RequestMapping("/api/products")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
 
-    @GetMapping("/products")
+    @GetMapping
     public List<ProductDTO> getAllProducts() {
         return productService.getAllProducts();
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable int id) {
         ProductDTO product = productService.getProductById(id);
         if (product != null) {
@@ -38,14 +39,15 @@ public class ProductController {
         }
     }
 
-    @PostMapping("/product/create")
+    @PostMapping
     public ResponseEntity<String> addProduct(@RequestBody ProductDTO productDTO) {
         productService.addProduct(productDTO);
         return ResponseEntity.ok("Product added successfully!");
     }
 
-    @PutMapping("/product/update")
-    public ResponseEntity<String> updateProduct(@RequestBody ProductDTO productDTO) {
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateProduct(@PathVariable int id, @RequestBody ProductDTO productDTO) {
+        productDTO.setId(id);
         boolean updated = productService.updateProduct(productDTO);
         if (updated) {
             return ResponseEntity.ok("Product updated successfully!");
@@ -54,7 +56,7 @@ public class ProductController {
         }
     }
 
-    @DeleteMapping("/product/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable int id) {
         boolean deleted = productService.deleteProduct(id);
         if (deleted) {

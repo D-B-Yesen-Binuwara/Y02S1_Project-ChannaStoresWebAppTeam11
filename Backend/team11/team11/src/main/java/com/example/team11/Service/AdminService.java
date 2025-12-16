@@ -31,7 +31,10 @@ public class AdminService {
     public AdminDTO getAdminById(Long id) {
         Admin admin = adminRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
-        return new AdminDTO(admin.getId(), admin.getUser().getEmail());
+        AdminDTO dto = new AdminDTO(admin.getId(), admin.getUser().getEmail());
+        dto.setUsername(admin.getUser().getUsername());
+        dto.setPhoneNumber(admin.getPhoneNumber());
+        return dto;
     }
 
     // Create a new admin (linking to an existing user)
@@ -43,6 +46,26 @@ public class AdminService {
         }
         Admin admin = new Admin();
         admin.setUser(user);
+        return adminRepository.save(admin);
+    }
+
+    // Update admin profile
+    public Admin updateAdmin(Long id, AdminDTO adminDTO) {
+        Admin admin = adminRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Admin not found"));
+        
+        User user = admin.getUser();
+        if (adminDTO.getUsername() != null) {
+            user.setUsername(adminDTO.getUsername());
+        }
+        if (adminDTO.getEmail() != null) {
+            user.setEmail(adminDTO.getEmail());
+        }
+        if (adminDTO.getPhoneNumber() != null) {
+            admin.setPhoneNumber(adminDTO.getPhoneNumber());
+        }
+        
+        userRepository.save(user);
         return adminRepository.save(admin);
     }
 

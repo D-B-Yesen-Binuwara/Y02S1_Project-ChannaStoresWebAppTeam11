@@ -4,6 +4,7 @@ import com.example.team11.DTO.AdminDTO;
 import com.example.team11.Entity.Admin;
 import com.example.team11.Service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,8 +30,24 @@ public class AdminController {
 
     // Create a new admin by linking an existing user
     @PostMapping("/{userId}")
-    public Admin createAdmin(@PathVariable Long userId) {
-        return adminService.createAdmin(userId);
+    public ResponseEntity<?> createAdmin(@PathVariable Long userId) {
+        try {
+            Admin admin = adminService.createAdmin(userId);
+            return ResponseEntity.ok(admin);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Update admin profile
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateAdmin(@PathVariable Long id, @RequestBody AdminDTO adminDTO) {
+        try {
+            Admin admin = adminService.updateAdmin(id, adminDTO);
+            return ResponseEntity.ok(admin);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // Delete an admin by ID
