@@ -4,27 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Cart</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../Common/styles.css">
 </head>
 <body>
     <header>
         <nav>
             <ul class="tabs">
-				<li class="store-name">Channa Stores</li>
+                <li class="store-name">Channa Stores</li>
                 <li><a href="products.html" class="tab">Products</a></li>
                 <li><a href="cart.html" class="tab active">Cart</a></li>
                 <li><a href="orders.html" class="tab">Orders</a></li>
                 <li><a href="profile.html" class="tab">Profile</a></li>
-                <li class="signout-tab"><a href="login.html" class="tab">Sign Out</a></li>
+                <li class="signout-tab"><a href="../Common/login.html" class="tab">Sign Out</a></li>
             </ul>
-
         </nav>
     </header>
 
     <main>
         <h2>Your Cart</h2>
 
-        <!-- Cart Table -->
         <section id="cart-section">
             <table id="cart-table">
                 <thead>
@@ -52,32 +50,37 @@
     <script>
         let cart = [];
 
-        // Function to fetch cart items from the backend
-        function fetchCartItems() {
-            fetch('http://localhost:8080/api/cart/1/items/items') 
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch cart items');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    cart = data;
-                    renderCart();
-                })
-                .catch(error => {
-                    console.error('Error fetching cart items:', error);
-                    alert('Failed to fetch cart items');
-                });
+        // Cookie helper functions
+        function setCartCookie(cart) {
+            document.cookie = `cart=${encodeURIComponent(JSON.stringify(cart))}; path=/; max-age=86400`;
         }
 
-        // Function to render the cart
+        function getCartFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'cart') {
+                    return JSON.parse(decodeURIComponent(value));
+                }
+            }
+            return [];
+        }
+
+        function loadCart() {
+            cart = getCartFromCookie();
+            renderCart();
+        }
+
+        function saveCart() {
+            setCartCookie(cart);
+        }
+
         function renderCart() {
             const cartTableBody = document.querySelector('#cart-table tbody');
             cartTableBody.innerHTML = '';
             let totalPrice = 0;
 
-            cart.forEach(item => {
+            cart.forEach((item, index) => {
                 const row = document.createElement('tr');
                 const totalItemPrice = item.price * item.quantity;
                 totalPrice += totalItemPrice;
@@ -85,89 +88,37 @@
                 row.innerHTML = `
                     <td>${item.productName}</td>
                     <td>
-                        <input type="number" value="${item.quantity}" min="0" id="quantity-${item.id}" onchange="updateQuantity(${item.id})">
+                        <input type="number" value="${item.quantity}" min="1" id="quantity-${index}" onchange="updateQuantity(${index})">
                     </td>
                     <td>Rs.${item.price.toFixed(2)}</td>
                     <td>Rs.${totalItemPrice.toFixed(2)}</td>
-                    <td><button onclick="removeFromCart(${item.id})">Remove</button></td>
+                    <td><button onclick="removeFromCart(${index})">Remove</button></td>
                 `;
                 cartTableBody.appendChild(row);
             });
 
-            // Update the total price
             document.getElementById('total-price').textContent = `Total: Rs. ${totalPrice.toFixed(2)}`;
         }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-function updateQuantity(itemId) {
-            const quantityInput = document.getElementById(`quantity-${itemId}`);
+
+        function updateQuantity(index) {
+            const quantityInput = document.getElementById(`quantity-${index}`);
             const newQuantity = parseInt(quantityInput.value);
 
-            // Validate quantity
-            if (isNaN(newQuantity) || newQuantity < 0) {
-                alert('Please enter a valid non-negative number for quantity!');
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                alert('Please enter a valid quantity (minimum 1)');
+                quantityInput.value = cart[index].quantity;
                 return;
             }
 
-            // Update the quantity in the local cart
-            const product = cart.find(item => item.id === itemId);
-            if (!product) {
-                console.error(`Product with ID ${itemId} not found in the cart.`);
-                return;
-            }
-            product.quantity = newQuantity;
-
-            // Update the backend with the new quantity
-            updateCartQuantityInBackend(itemId, newQuantity);
-
-            // Re-render the cart
+            cart[index].quantity = newQuantity;
+            saveCart();
             renderCart();
         }
 
-        function updateCartQuantityInBackend(itemId, newQuantity) {
-            fetch(`http://localhost:8080/api/cart/1/items/${itemId}/quantity`, { 
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ quantity: newQuantity })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.text().then(text => { throw new Error(text) });
-                }
-                return response.json().catch(() => ({})); // Handle non-JSON response
-            })
-            .then(data => {
-                console.log('Cart updated successfully:', data);
-                renderCart();
-            })
-            .catch(error => {
-                console.error('Error updating cart:', error);
-                alert('Failed to update cart. Please try again!');
-            });
-        }
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Function to remove a product from the cart
-        function removeFromCart(itemId) {
-            fetch(`http://localhost:8080/api/cart/1/items/${itemId}`, { 
-                method: 'DELETE'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-                // Remove the item from the local cart
-                cart = cart.filter(item => item.id !== itemId);
-                // Re-render the cart to reflect changes
-                renderCart();
-            })
-            .catch(error => {
-                console.error('Error removing item from cart:', error);
-                alert('Failed to remove item from cart. Please try again!');
-            });
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            renderCart();
         }
 
         document.getElementById('checkout-button').addEventListener('click', function() {
@@ -175,34 +126,57 @@ function updateQuantity(itemId) {
                 alert('Your cart is empty!');
                 return;
             }
-
             
-            alert('Order placed successfully!');
-            cart = [];  // Empty the cart after checkout
-            renderCart();  // Re-render the cart
-        });
-
-        // Initial fetch and render of the cart
-        fetchCartItems();
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Checkout functionality
-        document.getElementById('checkout-button').addEventListener('click', function() {
-            if (cart.length === 0) {
-                alert('Your cart is empty!');
-                return;
+            // Update product quantities
+            cart.forEach(cartItem => {
+                fetch(`http://localhost:8080/api/products/${cartItem.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: cartItem.productName,
+                        price: cartItem.price,
+                        quantity: Math.max(0, cartItem.availableQuantity - cartItem.quantity),
+                        category: cartItem.category || 'General'
+                    })
+                }).catch(error => console.error('Error updating product quantity:', error));
+            });
+            
+            // Save order to cookies
+            let orders = [];
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'orders') {
+                    orders = JSON.parse(decodeURIComponent(value));
+                    break;
+                }
             }
-
+            
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            const newOrder = {
+                id: Date.now(),
+                customerEmail: userData ? userData.email : 'unknown@email.com',
+                products: cart.map(item => ({
+                    id: item.id,
+                    name: item.productName,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            };
+            
+            orders.push(newOrder);
+            document.cookie = `orders=${encodeURIComponent(JSON.stringify(orders))}; path=/; max-age=86400`;
             
             alert('Order placed successfully!');
-            cart = [];  // Empty the cart after checkout
-            renderCart();  // Re-render the cart
+            cart = [];
+            saveCart();
+            renderCart();
         });
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Initial render of the cart
-        
+
+        loadCart();
     </script>
 </body>
 </html>

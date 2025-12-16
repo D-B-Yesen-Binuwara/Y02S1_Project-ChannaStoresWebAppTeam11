@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +48,7 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<String> updateProduct(@PathVariable int id, @RequestBody ProductDTO productDTO) {
-        productDTO.setId(id);
+        productDTO.setId((long) id);
         boolean updated = productService.updateProduct(productDTO);
         if (updated) {
             return ResponseEntity.ok("Product updated successfully!");

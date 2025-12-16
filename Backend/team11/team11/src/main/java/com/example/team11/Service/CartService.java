@@ -18,56 +18,46 @@ public class CartService {
         this.cartRepository = cartRepository;
     }
 
-    // Method to create a new Cart
-    public CartDTO createCart() {
-        Cart cart = new Cart();
-        cart.setTotalPrice(0.0); // Initialize total price as 0
-        cart = cartRepository.save(cart); // Save and return the new Cart
-        return convertToDTO(cart); // Convert and return the CartDTO
+    public CartDTO getOrCreateCartForUser(Long userId) {
+        Cart cart = cartRepository.findByUserId(userId);
+        if (cart == null) {
+            cart = new Cart();
+            cart.setUserId(userId);
+            cart.setTotalPrice(0.0);
+            cart = cartRepository.save(cart);
+        }
+        return convertToDTO(cart);
     }
 
+    public CartDTO getCartById(Long id) {
+        Cart cart = cartRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        return convertToDTO(cart);
+    }
 
-
-    
-    // Method to delete a Cart by ID
     public void deleteCart(Long id) {
-        Cart cart = cartRepository.findById(id).orElseThrow(() -> new RuntimeException("Cart not found"));
-        cartRepository.delete(cart); // Delete the Cart
+        Cart cart = cartRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        cartRepository.delete(cart);
     }
 
-    
-// Conversion methods between Entity and DTO
-private CartDTO convertToDTO(Cart cart) {
-    CartDTO cartDTO = new CartDTO();
-    cartDTO.setId(cart.getId());
-    cartDTO.setTotalPrice(cart.getTotalPrice());
+    private CartDTO convertToDTO(Cart cart) {
+        CartDTO cartDTO = new CartDTO();
+        cartDTO.setId(cart.getId());
+        cartDTO.setTotalPrice(cart.getTotalPrice());
 
-    // Convert CartItem entities to CartItemDTOs
-    List<CartItemDTO> cartItemDTOs = cart.getItems().stream()
-            .map(item -> {
-                CartItemDTO cartItemDTO = new CartItemDTO();
-                cartItemDTO.setId(item.getId());
-                cartItemDTO.setProductName(item.getProductName());
-                cartItemDTO.setQuantity(item.getQuantity());
-                cartItemDTO.setPrice(item.getPrice());
-                return cartItemDTO;
-            })
-            .collect(Collectors.toList());
+        List<CartItemDTO> cartItemDTOs = cart.getItems().stream()
+                .map(item -> {
+                    CartItemDTO cartItemDTO = new CartItemDTO();
+                    cartItemDTO.setId(item.getId());
+                    cartItemDTO.setProductName(item.getProductName());
+                    cartItemDTO.setQuantity(item.getQuantity());
+                    cartItemDTO.setPrice(item.getPrice());
+                    return cartItemDTO;
+                })
+                .collect(Collectors.toList());
 
-    cartDTO.setItems(cartItemDTOs); // Set the list of CartItemDTOs
-    return cartDTO;
+        cartDTO.setItems(cartItemDTOs);
+        return cartDTO;
+    }
 }
-
-
-
-
-// Method to retrieve a Cart by its ID
-public CartDTO getCartById(Long id) {
-    Cart cart = cartRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Cart not found")); // Throw an exception if cart not found
-    return convertToDTO(cart); // Convert the Cart entity to CartDTO and return it
-}
-
-
-}
-

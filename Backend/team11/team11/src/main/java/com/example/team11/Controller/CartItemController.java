@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/cart/{cartId}/items")
+@CrossOrigin(origins = "*")
 public class CartItemController {
     private static final Logger logger = LoggerFactory.getLogger(CartItemController.class);
     private final CartItemService cartItemService;
@@ -36,7 +37,7 @@ public class CartItemController {
     }
 
     // Get all CartItems for a Cart
-    @GetMapping("/items")
+    @GetMapping
     public ResponseEntity<List<CartItemDTO>> getCartItems(@PathVariable Long cartId) {
         try {
             List<CartItemDTO> cartItems = cartItemService.getCartItems(cartId);

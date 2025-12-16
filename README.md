@@ -87,9 +87,10 @@ Y02S1_Project-ChannaStoresWebAppTeam11/
 - **Order Management**: View order history
 - **Profile Management**: Update personal details
 
-### 📦 Supplier (Contact Only)
+### 📦 Supplier Contacts
 - **Contact Information**: Name, email, phone, product type
-- **No Login Access**: Managed by admin as contact details only
+- **No Login Access**: Contact details only, managed by admin
+- **Purpose**: Reference for product sourcing and communication
 
 ## 🔌 API Endpoints
 
@@ -119,6 +120,20 @@ Y02S1_Project-ChannaStoresWebAppTeam11/
 - `POST /api/supplier-contacts` - Add supplier contact
 - `PUT /api/supplier-contacts/{id}` - Update supplier contact
 - `DELETE /api/supplier-contacts/{id}` - Delete supplier contact
+
+## 🗄️ Database Schema
+
+### Core Entities
+- **Users**: Base user information (username, email, password, role)
+- **Admins**: Admin-specific data (phone number)
+- **Customers**: Customer-specific data (phone number)
+- **Products**: Product catalog (name, price, quantity, category)
+- **SupplierContacts**: Supplier contact information (name, email, phone, product type)
+
+### Entity Relationships
+- **Users** ↔ **Admins**: One-to-One (shared primary key)
+- **Users** ↔ **Customers**: One-to-One (shared primary key)
+- **SupplierContacts**: Standalone entity (no user relationship)
 
 ## 🔐 Security Features
 - Role-based access control

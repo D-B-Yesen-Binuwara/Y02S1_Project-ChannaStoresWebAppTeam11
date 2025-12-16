@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management</title>
+    <link rel="stylesheet" href="../Common/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul class="tabs">
+                <li class="store-name">Channa Stores</li> 
+                <li id="accounts-tab" style="display: none;"><a href="userhandling03.html" class="tab">Accounts</a></li>
+                <li><a href="Adproducts.html" class="tab">Inventory</a></li>
+                <li><a href="Adorders.html" class="tab active">Orders</a></li>
+                <li><a href="Adprofile.html" class="tab">Profile</a></li>
+                <li class="signout-tab"><a href="../Common/login.html" class="tab">Sign Out</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <h2>Order Management</h2>
+        
+        <section id="order-list">
+            <table id="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer Email</th>
+                        <th>Products</th>
+                        <th>Total</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Orders will be populated here -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Shop Management System</p>
+    </footer>
+
+    <script>
+        let orders = [];
+
+        // Show accounts tab only for main admin
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        if (userData && userData.role === 'admin') {
+            document.getElementById('accounts-tab').style.display = 'block';
+        }
+
+        // Load orders from cookies
+        function loadOrders() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'orders') {
+                    orders = JSON.parse(decodeURIComponent(value));
+                    break;
+                }
+            }
+        }
+
+        // Render orders
+        function renderOrders() {
+            const tbody = document.querySelector('#orders-table tbody');
+            tbody.innerHTML = '';
+            
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.id}</td>
+                    <td>${order.customerEmail}</td>
+                    <td>${order.products.map(p => `${p.name} (x${p.quantity})`).join(', ')}</td>
+                    <td>Rs.${order.total.toFixed(2)}</td>
+                    <td>${order.date}</td>
+                    <td>
+                        <select onchange="updateOrderStatus(${order.id}, this.value)">
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            <option value="Canceled" ${order.status === 'Canceled' ? 'selected' : ''}>Canceled</option>
+                        </select>
+                    </td>
+                    <td><button onclick="viewOrderDetails(${order.id})">View Details</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update order status
+        function updateOrderStatus(orderId, newStatus) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = newStatus;
+                document.cookie = `orders=${encodeURIComponent(JSON.stringify(orders))}; path=/; max-age=86400`;
+                alert(`Order #${orderId} status updated to ${newStatus}`);
+            }
+        }
+
+        // View order details
+        function viewOrderDetails(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                alert(`Order Details:\n\nID: ${order.id}\nCustomer: ${order.customerEmail}\nProducts: ${order.products.map(p => `${p.name} (x${p.quantity})`).join(', ')}\nTotal: Rs.${order.total.toFixed(2)}\nDate: ${order.date}\nStatus: ${order.status}`);
+            }
+        }
+
+        // Initial load
+        loadOrders();
+        renderOrders();
+    </script>
+</body>
+</html>
